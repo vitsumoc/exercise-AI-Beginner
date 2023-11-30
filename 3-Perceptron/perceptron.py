@@ -12,7 +12,7 @@ import gzip
 np.random.seed(1)
 import random
 
-# 此示例要解决的问题是根据肿瘤的大小和年龄进行恶性或良性的分类
+# 此例要解决的问题是使用感知器区分两类数据
 
 # 随机生成分类数据
 # 数据数量
@@ -137,8 +137,10 @@ def accuracy(weights, test_x, test_labels):
 
 # 可视化训练过程
 def train_graph(positive_examples, negative_examples, num_iterations = 100):
+    # 数据维度
     num_dims = positive_examples.shape[1]
-    weights = np.zeros((num_dims,1)) # initialize weights
+    # 初始化weight
+    weights = np.zeros((num_dims,1))
     
     pos_count = positive_examples.shape[0]
     neg_count = negative_examples.shape[0]
@@ -159,31 +161,35 @@ def train_graph(positive_examples, negative_examples, num_iterations = 100):
         z  = np.dot(neg, weights)
         if z >= 0:
             weights = weights - neg.reshape(weights.shape)
-            
+
+        # 定期产生快照    
         if i % report_frequency == 0:             
+            # 使用当前weight对所有pos和neg数据进行dot
             pos_out = np.dot(positive_examples, weights)
             neg_out = np.dot(negative_examples, weights)        
             pos_correct = (pos_out >= 0).sum() / float(pos_count)
             neg_correct = (neg_out < 0).sum() / float(neg_count)
-            snapshots.append((np.copy(weights),(pos_correct+neg_correct)/2.0))
+            # 记录此时的权重值和正确率
+            snapshots.append((np.copy(weights), pos_correct/1.0, neg_correct/1.0))
 
     return snapshots
     # return np.array(snapshots)
 
 snapshots = train_graph(pos_examples, neg_examples)
 
-def plotit(pos_examples,neg_examples,snapshots,step):
-    fig = pylab.figure(figsize=(10,4))
+def plotit(pos_examples, neg_examples, snapshots, step):
+    fig = pylab.figure(figsize=(10, 4))
     fig.add_subplot(1, 2, 1)
     plot_boundary(pos_examples, neg_examples, snapshots[step][0])
     fig.add_subplot(1, 2, 2)
-    pylab.plot(np.arange(len(snapshots[:,1])), snapshots[:,1])
+    pylab.plot(np.arange(len(snapshots[:, 1])), snapshots[:, 1])
     pylab.ylabel('Accuracy')
     pylab.xlabel('Iteration')
-    pylab.plot(step, snapshots[step,1], "bo")
+    pylab.plot(step, snapshots[step, 1], "bo")
     pylab.show()
-def pl1(step):
-    plotit(pos_examples,neg_examples,snapshots,step)
 
-# 这里并没有出现组件, 感觉是python环境或者版本的问题
+def pl1(step):
+    plotit(pos_examples, neg_examples, snapshots, step)
+
+# 这种必须在 jupyter 环境下才能运行
 interact(pl1, step=widgets.IntSlider(value=0, min=0, max=len(snapshots)-1))
